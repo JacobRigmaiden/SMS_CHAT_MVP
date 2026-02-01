@@ -1,0 +1,61 @@
+{% extends "web/base.html" %}
+
+{% block title %}{{ group.name }} - SMS Chat{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h2 style="border: none; padding: 0; margin: 0;">{{ group.name }}</h2>
+            <span class="meta">{{ group.get_member_count }} member{{ group.get_member_count|pluralize }}</span>
+        </div>
+        <a href="{% url 'web:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <!-- Members -->
+    <details style="margin-bottom: 20px;">
+        <summary style="cursor: pointer; color: #3498db;">View Members</summary>
+        <ul style="margin-top: 10px; padding-left: 20px;">
+            {% for member in members %}
+                <li>{{ member.name }}{% if member.id == group.created_by_id %} (owner){% endif %}</li>
+            {% endfor %}
+        </ul>
+    </details>
+
+    <!-- Messages -->
+    <h3 style="margin-bottom: 10px;">Messages</h3>
+
+    {% if messages_list %}
+        <ul class="message-list" id="message-list">
+            {% for msg in messages_list %}
+                <li class="message-item">
+                    <span class="sender">{{ msg.sender.name }}</span>
+                    <span class="time">{{ msg.created_at|date:"M d, g:i A" }}</span>
+                    <div class="content">{{ msg.content }}</div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state" style="border: 1px solid #eee; border-radius: 4px;">
+            <p>No messages yet. Start the conversation!</p>
+        </div>
+    {% endif %}
+
+    <!-- Send Message -->
+    <form method="post" action="{% url 'web:send_message' group.id %}">
+        {% csrf_token %}
+        <div class="form-group" style="display: flex; gap: 10px; margin-top: 20px;">
+            <input type="text" name="content" placeholder="Type your message..."
+                   style="flex: 1;" required maxlength="1600" autofocus>
+            <button type="submit" class="btn">Send</button>
+        </div>
+    </form>
+
+    <p style="margin-top: 15px; color: #777; font-size: 0.875rem;">
+        You can also text <strong>{{ twilio_number }}</strong> to send messages via SMS.
+        {% if my_groups_count > 1 %}
+            <br>Start your SMS with <strong>#{{ group.name|lower|cut:" " }}</strong> to send to this group.
+        {% endif %}
+    </p>
+</div>
+{% endblock %}

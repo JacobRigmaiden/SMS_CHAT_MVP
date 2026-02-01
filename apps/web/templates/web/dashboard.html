@@ -1,0 +1,92 @@
+{% extends "web/base.html" %}
+
+{% block title %}Dashboard - SMS Chat{% endblock %}
+
+{% block content %}
+<div class="grid">
+    <!-- My Groups -->
+    <div class="card">
+        <h2>My Groups</h2>
+
+        {% if my_groups %}
+            <ul class="group-list">
+                {% for group in my_groups %}
+                    <li class="group-item">
+                        <div>
+                            <h3><a href="{% url 'web:group_detail' group.id %}">{{ group.name }}</a></h3>
+                            <span class="meta">{{ group.get_member_count }} member{{ group.get_member_count|pluralize }}</span>
+                        </div>
+                        <form method="post" action="{% url 'web:leave_group' group.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary btn-small">Leave</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state">
+                <p>You haven't joined any groups yet.</p>
+                <p>Create or join a group to start chatting!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Create Group -->
+    <div class="card">
+        <h2>Create New Group</h2>
+
+        {% if create_error %}
+            <div class="alert alert-error">{{ create_error }}</div>
+        {% endif %}
+
+        <form method="post" action="{% url 'web:create_group' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="group_name">Group Name</label>
+                <input type="text" id="group_name" name="name"
+                       placeholder="Family, Work, Friends..." required>
+            </div>
+            <button type="submit" class="btn">Create Group</button>
+        </form>
+    </div>
+</div>
+
+<!-- Available Groups -->
+<div class="card mt-20">
+    <h2>Join a Group</h2>
+
+    <!-- Search -->
+    <form method="get" class="mb-20">
+        <div class="form-group" style="display: flex; gap: 10px;">
+            <input type="text" name="q" placeholder="Search groups..."
+                   value="{{ search_query|default:'' }}" style="flex: 1;">
+            <button type="submit" class="btn">Search</button>
+        </div>
+    </form>
+
+    {% if available_groups %}
+        <ul class="group-list">
+            {% for group in available_groups %}
+                <li class="group-item">
+                    <div>
+                        <h3>{{ group.name }}</h3>
+                        <span class="meta">{{ group.get_member_count }} member{{ group.get_member_count|pluralize }}</span>
+                    </div>
+                    <form method="post" action="{% url 'web:join_group' group.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-small">Join</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            {% if search_query %}
+                <p>No groups found for "{{ search_query }}"</p>
+            {% else %}
+                <p>No groups available to join.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
